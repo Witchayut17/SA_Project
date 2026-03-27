@@ -1,0 +1,411 @@
+.header {
+    margin-left: 60px;
+    margin-top: -140px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+}
+
+.userIcon {
+    margin-top: 15px;
+    margin-right: 15px;
+    font-size: 5rem;
+    color: rgb(255, 255, 255);
+}
+
+.textcontainer {
+    line-height: 15px;
+}
+
+.name {
+    font-size: 2rem;
+}
+
+.role {
+    font-size: 1.25rem;
+}
+
+.logoutcontainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align-last: center;
+    text-align: center;
+    font-size: 1.5rem;
+    margin-left: auto;
+    margin-right: 100px;
+    background-color: #b20d12;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.logoutbtn {
+    border: none;
+    font-size: 1.25rem;
+    background-color: transparent;
+    color: white;
+    cursor: pointer;
+}
+
+.checkinsection {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    top: -40px;
+    left: 900px;
+}
+
+.checker {
+    margin-top: -15px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+}
+
+button:disabled {
+    background-color: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.checkincontainer:disabled,
+.checkoutcontainer:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.clockcontainer {
+    margin-left: 35px;
+    margin-top: 70px;
+    display: flex;
+    justify-content: flex-start;
+    text-align: center;
+}
+
+.checkoutcontainer {
+    max-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background-color: #b20d12;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+}
+
+.checkin,
+.checkout {
+    border: none;
+    font-size: 1.25rem;
+    background-color: transparent;
+    color: white;
+    cursor: pointer;
+}
+
+.checkincontainer {
+    max-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background-color: #28a745;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+}
+
+.checkin:disabled,
+.checkout:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.leaverequest {
+    position: absolute;
+    top: 550px;
+    right: 300px;
+    display: flex;
+    flex-direction: column;
+    background-color: #ededed;
+    width: 400px;
+    height: 450px;
+    border-radius: 35px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.leaveheader h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.leaveform {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+    width: 100%;
+}
+
+.leaveform label {
+    display: flex;
+    flex-direction: column;
+    font-size: 1rem;
+}
+
+.leaveform select,
+.leaveform input {
+    margin-top: 5px;
+    padding: 5px 8px;
+    border-radius: 10px;
+    border: none;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.leaveform button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: background-color 0.2s ease;
+}
+
+.leaveform button:hover {
+    background-color: #218838;
+}
+
+.otsection {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: #ededed;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 35px;
+    padding: 20px;
+    margin: 415px 0 0 500px;
+    box-sizing: border-box;
+}
+
+.myot {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: #ededed;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 35px;
+    padding: 20px;
+    margin: 20px 0 0 500px;
+    box-sizing: border-box;
+}
+
+.otItem {
+    background-color: #fff;
+    border-radius: 15px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    width: 360px;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+}
+
+.otSummary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.otSummary h3,
+.otSummary h4 {
+    margin: 5px 0;
+    font-size: 0.95rem;
+    flex: 1 1 auto;
+}
+
+.otSummary button {
+    background-color: #003366;
+    color: white;
+    border: none;
+    padding: 5px 20px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    align-items: center;
+}
+
+.otDetails {
+    margin-top: 10px;
+    padding-left: 10px;
+    border-left: 2px solid #003366;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.otDetails p {
+    margin: 3px 0;
+    font-size: 0.95rem;
+    word-wrap: break-word;
+}
+
+.myot h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.myot .otItem {
+    background-color: #f9f9f9;
+    border-radius: 15px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 360px;
+}
+
+.myot .otSummary h3 {
+    font-size: 1rem;
+}
+
+.myot .otSummary button {
+    background-color: #003366;
+    color: white;
+    border: none;
+    padding: 5px 20px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    align-items: center;
+}
+
+.myot .otDetails p {
+    margin: 4px 0;
+    font-size: 1rem;
+    color: black;
+}
+
+.otAction {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.otDetails button,
+.otsection .otDetails button {
+    display: flex;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    max-width: 100px;
+    padding: 2px 10px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: auto;
+    transition: background-color 0.2s ease;
+}
+
+.otDetails button:disabled,
+.otsection .otDetails button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.otDetails button:hover:not(:disabled),
+.otsection .otDetails button:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.myot .otDetails button.checkInOT {
+    background-color: #007bff;
+}
+
+.myot .otDetails button.checkOutOT {
+    background-color: #dc3545;
+}
+
+.myot .otDetails button+button {
+    margin-left: 10px;
+}
+
+.myleave {
+    position: absolute;
+    top: 550px;
+    right: -150px;
+    /* 👈 ขยับไปข้าง ๆ leave request */
+    display: flex;
+    flex-direction: column;
+    background-color: #ededed;
+    width: 400px;
+    height: 450px;
+    border-radius: 35px;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.myleave h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+/* card แต่ละรายการ */
+.leaveItem {
+    background-color: #fff;
+    border-radius: 15px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+/* แถวข้อมูล */
+.leaveItem p {
+    margin: 4px 0;
+}
+
+/* status */
+.leaveStatus {
+    font-weight: bold;
+    padding: 3px 10px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+/* สีสถานะ */
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}

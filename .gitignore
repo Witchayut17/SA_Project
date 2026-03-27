@@ -1,0 +1,12 @@
+Frontend/node_modules/
+Server/node_modules/
+
+*.log
+
+Frontend/build/
+Server/build/
+
+*.env
+
+.DS_Store
+Thumbs.db

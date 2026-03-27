@@ -1,0 +1,12 @@
+* {
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    max-height: 100vh;
+    border-top: 170px solid #001b3d;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
