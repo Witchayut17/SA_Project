@@ -8,6 +8,7 @@ import Modal from 'react-modal';
 const HRdb = ({ userId }) => {
 
     const [employee, setEmployee] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState(null);
     const [allEmployees, setAllEmployees] = useState([]);
     const [selectedUserId, setSelectedUserId] = useState(null);
@@ -209,8 +210,10 @@ const HRdb = ({ userId }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+
     const handleCheckIn = async () => {
         if (!loggedInUserId) return alert("User not logged in!");
+        console.log("Checking in user:", loggedInUserId);
         try {
             const response = await fetch('http://localhost:1704/attendance/checkin', {
                 method: 'POST',
@@ -218,11 +221,19 @@ const HRdb = ({ userId }) => {
                 body: JSON.stringify({ userId: loggedInUserId })
             });
             const data = await response.json();
-            const time = data.checkin_time ? new Date(data.checkin_time).toLocaleTimeString('en-TH', { hour12: false }) : 'unknown';
-            alert(data.alreadyCheckedIn ? `คุณเช็คอินไปแล้ว เมื่อ ${time}` : `เช็คอินเมื่อ ${time}`);
+
+            const time = data.checkin_time
+                ? new Date(data.checkin_time).toLocaleTimeString('en-TH', { hour12: false })
+                : null;
+
+            if (data.alreadyCheckedIn || !response.ok) {
+                alert(time ? `${data.message} เมื่อ ${time}` : data.message);
+            } else {
+                alert(`เช็คอินเรียบร้อยเมื่อ ${time}`);
+            }
         } catch (err) {
             console.error(err);
-            alert('Something went wrong');
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
         }
     };
 
@@ -236,7 +247,7 @@ const HRdb = ({ userId }) => {
             });
             const data = await response.json();
             const time = data.checkout_time ? new Date(data.checkout_time).toLocaleTimeString('en-TH', { hour12: false }) : 'unknown';
-            alert(response.ok ? `เช็คเอาท์เมื่อ ${time}` : `${data.message} เมื่อ ${time}`);
+            alert(response.ok ? `เช็คเอาท์เรียบร้อยเมื่อ ${time}` : `${data.message} เมื่อ ${time}`);
         } catch (err) {
             console.error(err);
             alert('Something went wrong');
@@ -262,6 +273,33 @@ const HRdb = ({ userId }) => {
         } catch (err) {
             console.error(err);
             alert('บันทึกล้มเหลว');
+        }
+    };
+
+    const handleChange2 = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSave2 = async () => {
+        try {
+            const res = await fetch(`http://localhost:1704/employee/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (res.ok) {
+                alert('ข้อมูลอัปเดตเรียบร้อยแล้ว');
+                setEmployee(prev => ({ ...prev, ...formData }));
+                setIsEditing(false);
+            } else {
+                const data = await res.json();
+                alert(`Error: ${data.message}`);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Something went wrong');
         }
     };
 
@@ -297,6 +335,44 @@ const HRdb = ({ userId }) => {
                         <button className={style.checkout} onClick={handleCheckout}>บันทึกออกงาน</button>
                     </div>
                 </div>
+            </div>
+
+            <div className={style.profilesection}>
+                <div className={style.profileheader}>
+                    <FontAwesomeIcon icon={faUser} className={style.profileIcon} />
+                    <h2>ข้อมูลส่วนบุคคล</h2>
+                </div>
+
+                <div className={style.profileinfo}>
+                    {isEditing ? (
+                        <>
+                            <input name="name" value={formData.name} onChange={handleChange2} placeholder='ชื่อจริงไม่ต้องมีคำนำหน้า' />
+                            <input name="lastname" value={formData.lastname} onChange={handleChange2} placeholder='นามสกุล' />
+                            <input name="tel" value={formData.tel} onChange={handleChange2} placeholder='เบอร์โทร' />
+                            <input name="age" type="number" value={formData.age} onChange={handleChange2} placeholder='อายุ' />
+                            <input name="address" value={formData.address} onChange={handleChange2} placeholder='ที่อยู่' />
+                        </>
+                    ) : (
+                        <>
+                            <h2>ชื่อ : {employee.name}</h2>
+                            <h2>นามสกุล : {employee.lastname}</h2>
+                            <h2>เบอร์โทรศัพท์ : {employee.tel}</h2>
+                            <h2>อายุ : {employee.age}</h2>
+                            <h2>ที่อยู่ : {employee.address}</h2>
+                        </>
+                    )}
+                </div>
+
+                {isEditing ? (
+                    <div className={style.btncontainer} style={{ marginTop: '10px' }}>
+                        <button onClick={handleSave2} className={style.saveBtn}>บันทึก</button>
+                        <button onClick={() => setIsEditing(false)} className={style.cancelBtn}>ยกเลิก</button>
+                    </div>
+                ) : (
+                    <button className={style.editBtn} onClick={() => setIsEditing(true)}>
+                        แก้ไขข้อมูล
+                    </button>
+                )}
             </div>
 
             <div className={style.hredit}>

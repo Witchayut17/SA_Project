@@ -147,7 +147,7 @@
 
 .leaverequest {
     position: absolute;
-    top: 230px;
+    top: 570px;
     left: 600px;
     display: flex;
     flex-direction: column;
@@ -250,7 +250,7 @@
 .otCreate {
     position: absolute;
     top: 230px;
-    left: 1080px;
+    left: 1120px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -422,14 +422,14 @@ button:disabled {
 
 .clockcontainer {
     margin-left: 35px;
-    margin-top: 70px;
+    margin-top: 50px;
     display: flex;
     justify-content: flex-start;
     text-align: center;
 }
 
 .checkoutcontainer {
-    max-width: 100px;
+    max-width: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -450,7 +450,7 @@ button:disabled {
 }
 
 .checkincontainer {
-    max-width: 100px;
+    max-width: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -467,4 +467,221 @@ button:disabled {
     color: #666;
     cursor: not-allowed;
     opacity: 0.7;
+}
+
+@media (max-width: 1024px) {
+
+    .container {
+        width: 90%;
+        justify-content: center;
+        margin: 0 auto;
+        padding: 0px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .header {
+        margin-top: -170px !important;
+        margin-left: 0 !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+    }
+
+    .header .name {
+        color: white !important;
+    }
+
+    .userIcon {
+        margin-left: 20px;
+        margin-bottom: -20px;
+        font-size: 4rem;
+        color: rgb(255, 255, 255);
+    }
+
+    .logoutcontainer {
+        margin: 15px auto;
+        margin-bottom: -20px;
+    }
+
+    .checkinsection {
+        align-items: center;
+        top: 0;
+        left: 0;
+    }
+
+    .checkinsection,
+    .hredit,
+    .leaverequest,
+    .otCreate,
+    .otcheck {
+        position: static !important;
+        width: 100% !important;
+        max-width: 500px;
+        margin: 15px auto !important;
+        height: auto !important;
+        padding: 20px;
+        box-sizing: border-box;
+        border-radius: 15px;
+    }
+
+    .editForm,
+    .otForm {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        text-align: left;
+    }
+
+    .editForm input,
+    .otForm input,
+    .hredit select,
+    .leaverequest select,
+    .otcheck select {
+        width: 100% !important;
+        padding: 12px;
+        margin: 5px 0 10px 0;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+
+    .leaveFilter div {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .leaveFilter label {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        gap: 5px;
+    }
+
+    .btnContainer {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .btnContainer button {
+        flex: 1;
+        padding: 12px;
+    }
+
+    .participantList ul {
+        padding-left: 0;
+        list-style: none;
+    }
+
+    .participantList li {
+        background: #f4f4f4;
+        margin-bottom: 5px;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .clockcontainer {
+        margin: -5px 0 15px 0;
+    }
+
+    .clockcontainer h1,
+    .clockcontainer h2 {
+        color: black !important;
+    }
+
+    .checker {
+        justify-content: center;
+    }
+}
+
+.profilesection {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: #ededed;
+    width: 500px;
+    border-radius: 35px;
+    padding: 20px 40px;
+    top: 230px;
+    left: 550px;
+}
+
+.profileheader {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.profileIcon {
+    font-size: 3rem;
+    color: #003366;
+}
+
+.profileinfo {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 20px;
+    row-gap: 10px;
+    width: 100%;
+    line-height: 1.5;
+}
+
+.profileinfo input {
+    width: 100%;
+    padding: 2.5px 8px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: none;
+    box-sizing: border-box;
+}
+
+.profileinfo h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.editBtn {
+    background-color: #003366;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 25px;
+    border: none;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+.btncontainer {
+    display: flex;
+    gap: 5px;
+}
+
+.saveBtn {
+    grid-column: span 2;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    background-color: #28a745;
+    color: white;
+}
+
+.cancelBtn {
+    grid-column: span 2;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    background-color: #dc3545;
+    color: white;
 }

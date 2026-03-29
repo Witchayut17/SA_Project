@@ -93,14 +93,14 @@ button:disabled {
 
 .clockcontainer {
     margin-left: 35px;
-    margin-top: 70px;
+    margin-top: 50px;
     display: flex;
     justify-content: flex-start;
     text-align: center;
 }
 
 .checkoutcontainer {
-    max-width: 100px;
+    max-width: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -121,7 +121,7 @@ button:disabled {
 }
 
 .checkincontainer {
-    max-width: 100px;
+    max-width: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -150,8 +150,8 @@ button:disabled {
     width: 500px;
     border-radius: 35px;
     padding: 20px 40px;
-    top: 200px;
-    left: 410px;
+    top: 220px;
+    left: 110px;
 }
 
 .profileheader {
@@ -235,7 +235,7 @@ button:disabled {
     max-width: 400px;
     border-radius: 35px;
     padding: 20px;
-    margin: 415px 0 0 500px;
+    margin: 415px 0 0 165px;
     box-sizing: border-box;
 }
 
@@ -248,7 +248,7 @@ button:disabled {
     max-width: 400px;
     border-radius: 35px;
     padding: 20px;
-    margin: 20px 0 0 500px;
+    margin: 20px 0 0 165px;
     box-sizing: border-box;
 }
 
@@ -385,13 +385,13 @@ button:disabled {
 
 .leaverequest {
     position: absolute;
-    top: 550px;
-    right: 300px;
+    top: 220px;
+    right: 590px;
     display: flex;
     flex-direction: column;
     background-color: #ededed;
     width: 400px;
-    height: 450px;
+    height: 410px;
     border-radius: 35px;
     padding: 20px;
     box-sizing: border-box;
@@ -427,7 +427,7 @@ button:disabled {
 }
 
 .leaveform button {
-    background-color: #28a745;
+    background-color: #003366;
     color: white;
     border: none;
     padding: 8px 20px;
@@ -462,15 +462,14 @@ button:disabled {
 
 .payslip {
     position: absolute;
-    top: 550px;
-    right: 800px;
+    top: 220px;
+    left: 670px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
     background-color: #ededed;
     width: 400px;
-    height: 450px;
+    height: 400px;
     border-radius: 35px;
     padding: 20px;
     box-sizing: border-box;
@@ -508,15 +507,15 @@ button:disabled {
 .slipDetails {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     background-color: #fff;
     border-radius: 20px;
     padding: 30px;
     margin: 0 auto;
-    height: 200px;
+    height: 220px;
     line-height: 30px;
-    width: 275px;
+    width: 350px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -591,9 +590,8 @@ button:disabled {
 
 .myleave {
     position: absolute;
-    top: 550px;
-    right: -150px;
-    /* 👈 ขยับไปข้าง ๆ leave request */
+    top: 220px;
+    right: 110px;
     display: flex;
     flex-direction: column;
     background-color: #ededed;
@@ -621,12 +619,10 @@ button:disabled {
     line-height: 1.4;
 }
 
-/* แถวข้อมูล */
 .leaveItem p {
     margin: 4px 0;
 }
 
-/* status */
 .leaveStatus {
     font-weight: bold;
     padding: 3px 10px;
@@ -634,7 +630,6 @@ button:disabled {
     display: inline-block;
 }
 
-/* สีสถานะ */
 .status-pending {
     background-color: #fff3cd;
     color: #856404;
@@ -648,4 +643,252 @@ button:disabled {
 .status-rejected {
     background-color: #f8d7da;
     color: #721c24;
+}
+
+@media (max-width: 1024px) {
+
+    .header {
+        margin-top: -170px !important;
+        margin-left: 0 !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+    }
+
+    .header .name {
+        color: white !important;
+    }
+
+    .userIcon {
+        margin-left: 20px;
+        margin-bottom: -20px;
+        font-size: 4rem;
+        color: rgb(255, 255, 255);
+    }
+
+    .logoutcontainer {
+        margin: 15px auto;
+        margin-bottom: -20px;
+    }
+
+    .checkinsection,
+    .profilesection,
+    .myot,
+    .otsection,
+    .leaverequest,
+    .payslip,
+    .myleave {
+        position: static;
+        width: 90%;
+        max-width: 500px;
+        margin: 20px auto !important;
+        height: auto;
+    }
+
+    .checkinsection {
+        align-items: center;
+        top: 0;
+        left: 0;
+    }
+
+    .clockcontainer {
+        margin: 10px 0 15px 0;
+    }
+
+    .clockcontainer h1,
+    h2 {
+        color: black !important;
+    }
+
+    .checker {
+        justify-content: center;
+    }
+
+    .profileinfo {
+        grid-template-columns: 1fr;
+    }
+
+    .otItem,
+    .myot .otItem {
+        width: 100%;
+    }
+
+    .slipDetails {
+        width: 100%;
+        max-width: 390px;
+    }
+
+    .leaverequest,
+    .payslip,
+    .myleave {
+        height: auto;
+        min-height: unset;
+    }
+}
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.slipModalContent {
+    position: relative;
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    padding: 30px;
+    border-radius: 12px;
+    outline: none;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+
+    animation: fadeIn 0.3s ease-out;
+}
+
+.slipHeader {
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #003366;
+    padding-bottom: 10px;
+}
+
+.subTitle {
+    color: #666;
+    margin: 5px 0;
+}
+
+.slipBody {
+    line-height: 1.8;
+}
+
+.slipRow {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+    font-size: 1rem;
+}
+
+.deduction {
+    color: #d9534f;
+}
+
+.totalRow {
+    font-size: 1.2rem;
+    color: #003366;
+    padding-top: 10px;
+}
+
+.timestamp {
+    font-size: 0.8rem;
+    color: #999;
+    margin-top: 20px;
+    text-align: right;
+}
+
+.slipActions {
+    margin-top: 25px;
+    display: flex;
+    gap: 10px;
+}
+
+.printBtn {
+    flex: 2;
+    background-color: #003366;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.closeBtn {
+    flex: 1;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+@media print {
+
+    .slipActions,
+    .closeBtn,
+    .printBtn {
+        display: none !important;
+    }
+
+    .slipModalContent {
+        box-shadow: none;
+        margin: 0;
+        width: 100%;
+    }
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .printableSlip,
+    .printableSlip * {
+        visibility: visible;
+    }
+
+    .printableSlip {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .slipActions {
+        display: none !important;
+    }
+}
+
+.slipContent {
+    padding: 30px;
+    background-color: white;
+    color: #333;
+}
+
+@media print {
+
+    body * {
+        visibility: hidden;
+    }
+
+    .slipContent,
+    .slipContent * {
+        visibility: visible;
+    }
+
+    .slipContent {
+        background-color: #fff;
+        padding: 40px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .slipActions {
+        display: none !important;
+    }
 }

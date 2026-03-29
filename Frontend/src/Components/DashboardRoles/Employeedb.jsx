@@ -4,6 +4,8 @@ import style from './Employee.module.css'
 import { useState, useEffect } from 'react';
 import Clock from '../Clock/Clock'
 import Modal from 'react-modal';
+import { useReactToPrint } from 'react-to-print';
+import { useRef } from 'react';
 
 const Employeedb = ({ userId }) => {
     const [employee, setEmployee] = useState(null);
@@ -24,6 +26,54 @@ const Employeedb = ({ userId }) => {
     const [showFullPayslip, setShowFullPayslip] = useState(false);
     const [showPayslipModal, setShowPayslipModal] = useState(false);
     const [myLeaves, setMyLeaves] = useState([]);
+
+    const contentRef = useRef(null);
+
+    const handlePrint = useReactToPrint({
+        contentRef,
+        documentTitle: `Payslip_${payslip?.userId}_${payslip?.month}_${payslip?.year}`,
+        removeAfterPrint: true,
+    });
+
+    const fetchMyOT = async () => {
+        if (!userId) return;
+        try {
+            const res = await fetch(`http://localhost:1704/my-ot/${userId}`);
+            const data = await res.json();
+
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+
+            const todayOT = data
+                .filter(item => {
+                    const itemDate = item.ot_date ? item.ot_date.split('T')[0] : "";
+                    return itemDate === todayString;
+                })
+                .map(item => ({
+                    ...item,
+                    original_ot_id: item.ot_id || item.ot?._id || item._id,
+                    display_hours: item.hours || '-',
+                    display_hours: item.hours || '-',
+                    display_start: item.start_time || null,
+                    display_end: item.end_time || null,
+                    display_desc: item.description || '-',
+                    display_max: item.max_people || '-',
+                    display_rate: item.ot_rate ?
+                        (item.ot_rate.$numberDecimal ? parseFloat(item.ot_rate.$numberDecimal) : item.ot_rate)
+                        : '-',
+                    checked_in: item.checked_in
+                        ? new Date(item.checked_in).toLocaleTimeString('en-TH', { hour12: false, hour: '2-digit', minute: '2-digit' })
+                        : '-',
+                    checked_out: item.checked_out
+                        ? new Date(item.checked_out).toLocaleTimeString('en-TH', { hour12: false, hour: '2-digit', minute: '2-digit' })
+                        : '-'
+                }));
+
+            setMyOt(todayOT);
+        } catch (err) {
+            console.error("Fetch My OT Error:", err);
+        }
+    };
 
     useEffect(() => {
         const fetchMyLeaves = async () => {
@@ -46,7 +96,7 @@ const Employeedb = ({ userId }) => {
                 const res = await fetch(
                     `http://localhost:1704/payslip-full/${userId}?month=${selectedMonth}&year=${selectedYear}`
                 );
-                if (!res.ok) throw new Error('Failed to fetch payslip');
+                if (!res.ok) throw new Error('ไม่พบสลิปในระบบ');
                 const data = await res.json();
                 setPayslip(data);
             } catch (err) {
@@ -81,7 +131,7 @@ const Employeedb = ({ userId }) => {
             const data = await res.json();
 
             if (res.ok) {
-                alert(`ส่งคำขอเรียบร้อย! วันลาเหลือ: ${data.remaining_days}`);
+                alert(`ส่งคำขอเรียบร้อย วันลาเหลือ : ${data.remaining_days}`);
                 setLeaveType('annual');
                 setStartDate('');
                 setEndDate('');
@@ -120,14 +170,16 @@ const Employeedb = ({ userId }) => {
             const res = await fetch('http://localhost:1704/ot/checkin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: loggedInUserId, otId })
+                body: JSON.stringify({
+                    userId: loggedInUserId,
+                    ot_id: otId
+                })
             });
             const data = await res.json();
 
             if (res.ok) {
-                const time = parseDate(data.checkin_time);
-                alert(data.checkin_time ? `เช็คอิน OT เรียบร้อย เวลา: ${time}` : `คุณเช็คอินแล้วเวลา ${time}`);
-                setMyOt(prev => prev.map(o => o._id === data._id ? { ...o, checked_in: time } : o));
+                alert("เช็คอิน OT เรียบร้อย");
+                fetchMyOT();
             } else {
                 alert(data.message);
             }
@@ -136,6 +188,7 @@ const Employeedb = ({ userId }) => {
             alert('เกิดข้อผิดพลาด');
         }
     };
+
     const handleCheckoutOT = async (otId) => {
         if (!loggedInUserId) return alert("User not logged in!");
         try {
@@ -146,9 +199,8 @@ const Employeedb = ({ userId }) => {
             });
             const data = await res.json();
             if (res.ok) {
-                const time = parseDate(data.checkout_time);
-                alert(`เช็คเอาท์ OT เรียบร้อย เวลา: ${time}`);
-                setMyOt(prev => prev.map(o => o._id === data._id ? { ...o, checked_out: time } : o));
+                alert("เช็คเอาท์ OT เรียบร้อย");
+                fetchMyOT();
             } else {
                 alert(data.message);
             }
@@ -193,27 +245,6 @@ const Employeedb = ({ userId }) => {
     };
 
     useEffect(() => {
-        const fetchMyOT = async () => {
-            try {
-                const res = await fetch(`http://localhost:1704/my-ot/${userId}`);
-                const data = await res.json();
-
-                const today = new Date();
-                const todayString = today.toISOString().split('T')[0];
-
-                const todayOT = data
-                    .filter(item => item.ot_date?.split('T')[0] === todayString)
-                    .map(item => ({
-                        ...item,
-                        checked_in: item.checked_in ? new Date(item.checked_in).toLocaleTimeString('en-TH', { hour12: false }) : '-',
-                        checked_out: item.checked_out ? new Date(item.checked_out).toLocaleTimeString('en-TH', { hour12: false }) : '-'
-                    }));
-
-                setMyOt(todayOT);
-            } catch (err) {
-                console.error(err);
-            }
-        };
         fetchMyOT();
     }, [userId]);
 
@@ -363,305 +394,329 @@ const Employeedb = ({ userId }) => {
                 </div>
             </div>
 
-            <div className={style.checkinsection}>
-                <div className={style.clockcontainer}><Clock /></div>
-                <div className={style.checker}>
-                    <div className={style.checkincontainer}>
-                        <FontAwesomeIcon icon={faPersonArrowDownToLine} />
-                        <button className={style.checkin} onClick={handleCheckIn}>บันทึกเข้างาน</button>
-                    </div>
-                    <div className={style.checkoutcontainer}>
-                        <FontAwesomeIcon icon={faPersonArrowUpFromLine} />
-                        <button className={style.checkout} onClick={handleCheckout}>บันทึกออกงาน</button>
+            <div className={style.Dashboard}>
+
+                <div className={style.checkinsection}>
+                    <div className={style.clockcontainer}><Clock /></div>
+                    <div className={style.checker}>
+                        <div className={style.checkincontainer}>
+                            <FontAwesomeIcon icon={faPersonArrowDownToLine} />
+                            <button className={style.checkin} onClick={handleCheckIn}>บันทึกเข้างาน</button>
+                        </div>
+                        <div className={style.checkoutcontainer}>
+                            <FontAwesomeIcon icon={faPersonArrowUpFromLine} />
+                            <button className={style.checkout} onClick={handleCheckout}>บันทึกออกงาน</button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div className={style.profilesection}>
-                <div className={style.profileheader}>
-                    <FontAwesomeIcon icon={faUser} className={style.profileIcon} />
-                    <h2>ข้อมูลส่วนบุคคล</h2>
-                </div>
+                <div className={style.profilesection}>
+                    <div className={style.profileheader}>
+                        <FontAwesomeIcon icon={faUser} className={style.profileIcon} />
+                        <h2>ข้อมูลส่วนบุคคล</h2>
+                    </div>
 
-                <div className={style.profileinfo}>
+                    <div className={style.profileinfo}>
+                        {isEditing ? (
+                            <>
+                                <input name="name" value={formData.name} onChange={handleChange} placeholder='ชื่อจริงไม่ต้องมีคำนำหน้า' />
+                                <input name="lastname" value={formData.lastname} onChange={handleChange} placeholder='นามสกุล' />
+                                <input name="tel" value={formData.tel} onChange={handleChange} placeholder='เบอร์โทร' />
+                                <input name="age" type="number" value={formData.age} onChange={handleChange} placeholder='อายุ' />
+                                <input name="address" value={formData.address} onChange={handleChange} placeholder='ที่อยู่' />
+                            </>
+                        ) : (
+                            <>
+                                <h2>ชื่อ : {employee.name}</h2>
+                                <h2>นามสกุล : {employee.lastname}</h2>
+                                <h2>เบอร์โทรศัพท์ : {employee.tel}</h2>
+                                <h2>อายุ : {employee.age}</h2>
+                                <h2>ที่อยู่ : {employee.address}</h2>
+                            </>
+                        )}
+                    </div>
+
                     {isEditing ? (
-                        <>
-                            <input name="name" value={formData.name} onChange={handleChange} placeholder='ชื่อจริงไม่ต้องมีคำนำหน้า' />
-                            <input name="lastname" value={formData.lastname} onChange={handleChange} placeholder='นามสกุล' />
-                            <input name="tel" value={formData.tel} onChange={handleChange} placeholder='เบอร์โทร' />
-                            <input name="age" type="number" value={formData.age} onChange={handleChange} placeholder='อายุ' />
-                            <input name="address" value={formData.address} onChange={handleChange} placeholder='ที่อยู่' />
-                        </>
+                        <div className={style.btncontainer} style={{ marginTop: '10px' }}>
+                            <button onClick={handleSave} className={style.saveBtn}>บันทึก</button>
+                            <button onClick={() => setIsEditing(false)} className={style.cancelBtn}>ยกเลิก</button>
+                        </div>
                     ) : (
-                        <>
-                            <h2>ชื่อ : {employee.name}</h2>
-                            <h2>นามสกุล : {employee.lastname}</h2>
-                            <h2>เบอร์โทรศัพท์ : {employee.tel}</h2>
-                            <h2>อายุ : {employee.age}</h2>
-                            <h2>ที่อยู่ : {employee.address}</h2>
-                        </>
+                        <button className={style.editBtn} onClick={() => setIsEditing(true)}>
+                            แก้ไขข้อมูล
+                        </button>
                     )}
                 </div>
 
-                {isEditing ? (
-                    <div className={style.btncontainer} style={{ marginTop: '10px' }}>
-                        <button onClick={handleSave} className={style.saveBtn}>บันทึก</button>
-                        <button onClick={() => setIsEditing(false)} className={style.cancelBtn}>ยกเลิก</button>
+                <div className={style.otsection}>
+                    <div className={style.otheader}>
+                        <h2>OT ประจำวัน</h2>
+                        {ot.length === 0 ? (
+                            <p>ยังไม่มี OT ประจำวัน</p>
+                        ) : (
+                            ot.map(item => (
+                                <div key={item._id} className={style.otItem}>
+                                    <div className={style.otSummary}>
+                                        <h3>จำนวน {item.hours} ชม.</h3>
+                                        <h3>เวลา {item.start_time} - {item.end_time}</h3>
+                                        <button onClick={() => toggleOt(item._id)}>
+                                            {expandedOtIds.has(item._id) ? 'ย่อ' : 'เพิ่มเติม'}
+                                        </button>
+                                    </div>
+                                    {expandedOtIds.has(item._id) && (
+                                        <div className={style.otDetails}>
+                                            <p>รายละเอียด : {item.description}</p>
+                                            <p>จำนวนคนสูงสุด : {item.max_people}</p>
+                                            <p>OT Rate : {item.ot_rate}</p>
+                                            <button
+                                                onClick={() => handleApplyOt(item._id)}
+                                                disabled={myOt.some(o => o.ot?._id === item._id)}
+                                            >
+                                                {myOt.some(o => o.ot?._id === item._id) ? 'สมัครแล้ว' : 'สมัคร'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
                     </div>
-                ) : (
-                    <button className={style.editBtn} onClick={() => setIsEditing(true)}>
-                        แก้ไขข้อมูล
-                    </button>
-                )}
-            </div>
+                </div>
 
-            <div className={style.otsection}>
-                <div className={style.otheader}>
-                    <h2>OT ประจำวัน</h2>
-                    {ot.length === 0 ? (
-                        <p>No OT today</p>
+                <div className={style.myot}>
+                    <h2>OT ของฉัน</h2>
+                    {myOt.length === 0 ? (
+                        <p>ยังไม่มี OT</p>
                     ) : (
-                        ot.map(item => (
+                        myOt.map(item => (
                             <div key={item._id} className={style.otItem}>
                                 <div className={style.otSummary}>
-                                    <h3>จำนวน {item.hours} ชม.</h3>
-                                    <h3>เวลา {item.start_time} - {item.end_time}</h3>
-                                    <button onClick={() => toggleOt(item._id)}>
-                                        {expandedOtIds.has(item._id) ? 'ย่อ' : 'เพิ่มเติม'}
-                                    </button>
+                                    <h3>
+                                        จำนวน: {item.display_hours} ชม. เวลา {" "}
+                                        {parseDate(item.display_start)}
+                                        {" - "}
+                                        {parseDate(item.display_end)}
+                                    </h3>
+
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button onClick={() => toggleOt(item._id)}>
+                                            {expandedOtIds.has(item._id) ? 'ย่อ' : 'เพิ่มเติม'}
+                                        </button>
+                                    </div>
                                 </div>
+
                                 {expandedOtIds.has(item._id) && (
                                     <div className={style.otDetails}>
-                                        <p>รายละเอียด : {item.description}</p>
-                                        <p>จำนวนคนสูงสุด : {item.max_people}</p>
-                                        <p>OT Rate : {item.ot_rate}</p>
-                                        <button
-                                            onClick={() => handleApplyOt(item._id)}
-                                            disabled={myOt.some(o => o.ot?._id === item._id)}
-                                        >
-                                            {myOt.some(o => o.ot?._id === item._id) ? 'สมัครแล้ว' : 'สมัคร'}
-                                        </button>
+                                        <p>รายละเอียด: {item.display_desc}</p>
+                                        <p>จำนวนคนสูงสุด: {item.display_max}</p>
+                                        <p>OT Rate: {item.display_rate}</p>
+                                        <div className={style.otAction}>
+                                            <span>Check-in: {item.checked_in}</span>
+                                            <button
+                                                onClick={() => handleCheckInOT(item.original_ot_id)}
+                                                disabled={item.checked_in !== '-'}
+                                            >
+                                                เข้า OT
+                                            </button>
+                                        </div>
+                                        <div className={style.otAction}>
+                                            <span>Check-out: {item.checked_out}</span>
+                                            <button
+                                                onClick={() => handleCheckoutOT(item.original_ot_id)}
+                                                disabled={item.checked_out !== '-'}
+                                            >
+                                                ออก OT
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         ))
                     )}
                 </div>
-            </div>
 
-            <div className={style.myot}>
-                <h2>OT ของฉัน</h2>
-                {myOt.length === 0 ? (
-                    <p>ยังไม่มี OT</p>
-                ) : (
-                    myOt.map(item => (
-                        <div key={item._id} className={style.otItem}>
-                            <div className={style.otSummary}>
-                                <h3>
-                                    จำนวน: {item.ot?.hours} ชม. เวลา {" "}
-                                    {parseDate(item.ot?.start_time)}
-                                    {" - "}
-                                    {parseDate(item.ot?.end_time)}
-                                </h3>
-
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <button onClick={() => toggleOt(item._id)}>
-                                        {expandedOtIds.has(item._id) ? 'ย่อ' : 'เพิ่มเติม'}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {expandedOtIds.has(item._id) && (
-                                <div className={style.otDetails}>
-                                    <p>รายละเอียด: {item.ot?.description}</p>
-                                    <p>จำนวนคนสูงสุด: {item.ot?.max_people}</p>
-                                    <p>OT Rate: {item.ot?.ot_rate?.$numberDecimal ? parseFloat(item.ot.ot_rate.$numberDecimal) : item.ot?.ot_rate}</p>
-                                    <div className={style.otAction}>
-                                        <span>Check-in: {item.checked_in}</span>
-                                        <button
-                                            onClick={() => handleCheckInOT(item.ot._id)}
-                                            disabled={item.checked_in !== '-'}
-                                        >
-                                            เข้า OT
-                                        </button>
-                                    </div>
-                                    <div className={style.otAction}>
-                                        <span>Check-out: {item.checked_out}</span>
-                                        <button
-                                            onClick={() => handleCheckoutOT(item.ot._id)}
-                                            disabled={item.checked_out !== '-'}
-                                        >
-                                            ออก OT
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ))
-                )}
-            </div>
-
-            <div className={style.leaverequest}>
-                <div className={style.leaveheader}>
-                    <h2>ส่งคำขอการลา</h2>
-                </div>
-
-                <div className={style.leaveform}>
-                    <label>
-                        ประเภทการลา:
-                        <select value={leaveType} onChange={(e) => setLeaveType(e.target.value)}>
-                            <option value="annual">ลาประจำปี</option>
-                            <option value="sick">ลาป่วย</option>
-                            <option value="casual">ลากิจ</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        วันที่เริ่ม:
-                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} min={new Date().toISOString().split('T')[0]} />
-                    </label>
-
-                    <label>
-                        วันที่สิ้นสุด:
-                        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate || new Date().toISOString().split('T')[0]} />
-                    </label>
-
-                    <label>
-                        จำนวนวันลา:
-                        <input
-                            type="number"
-                            value={dayRequested}
-                            readOnly
-                        />
-                    </label>
-                    <button onClick={handleLeaveSubmit}>ส่งคำขอการลา</button>
-                </div>
-            </div>
-
-            <div className={style.myleave}>
-                <h2>สถานะการลาของฉัน</h2>
-
-                {myLeaves.length === 0 ? (
-                    <p>ยังไม่มีรายการลา</p>
-                ) : (
-                    myLeaves.map(item => (
-                        <div key={item._id} className={style.leaveItem}>
-                            <p>ประเภท: {item.leave_type}</p>
-                            <p>
-                                วันที่:{" "}
-                                {new Date(item.start_date).toLocaleDateString()} -{" "}
-                                {new Date(item.end_date).toLocaleDateString()}
-                            </p>
-                            <p>จำนวนวัน: {item.day_requested}</p>
-
-                            <p>
-                                สถานะ:{" "}
-                                <span
-                                    style={{
-                                        color:
-                                            item.status === 'approved'
-                                                ? 'green'
-                                                : item.status === 'rejected'
-                                                    ? 'red'
-                                                    : 'orange',
-                                        fontWeight: 'bold'
-                                    }}
-                                >
-                                    {item.status === 'pending'
-                                        ? 'รออนุมัติ'
-                                        : item.status === 'approved'
-                                            ? 'อนุมัติแล้ว'
-                                            : 'ถูกปฏิเสธ'}
-                                </span>
-                            </p>
-
-                            <hr />
-                        </div>
-                    ))
-                )}
-            </div>
-
-            <div className={style.payslip}>
-                <div className={style.slipheader}>
-
-                    <h2>ใบเงินเดือน</h2>
-                </div>
-                <div className={style.slipFilters}>
-                    <label>
-                        เดือน:
-                        <select value={selectedMonth} onChange={e => setSelectedMonth(parseInt(e.target.value))}>
-                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                                <option key={m} value={m}>{m}</option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <label>
-                        ปี:
-                        <select value={selectedYear} onChange={e => setSelectedYear(parseInt(e.target.value))}>
-                            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
-                                <option key={y} value={y}>{y}</option>
-                            ))}
-                        </select>
-                    </label>
-                </div>
-                {loading ? (
-                    <p>Loading payslip...</p>
-                ) : error ? (
-                    <p>Error: {error}</p>
-                ) : !payslip ? (
-                    <p>No data</p>
-                ) : (
-                    <div className={style.slipDetails}>
-                        <p className={style.textp}>เงินเดือนพื้นฐาน: {payslip.base_salary?.toLocaleString() ?? 'null'} บาท</p>
-                        <p>OT: {payslip?.total_ot ?? '-'} บาท</p>
-                        <p className={style.textp}>
-                            เงินเดือนสุทธิ: {payslip.calculated_salary?.toLocaleString() ?? '-'} บาท
-                        </p>
-                        <button className={style.textp}
-                            disabled={!payslip}
-                            style={{ marginTop: '10px', padding: '7px 10px', cursor: 'pointer' }}
-                            onClick={() => setShowPayslipModal(true)}
-                        >
-                            ดูเพิ่มเติม / พิมพ์
-                        </button>
-                        <Modal
-                            isOpen={showPayslipModal}
-                            onRequestClose={() => setShowPayslipModal(false)}
-                            contentLabel="Payslip Detail"
-                            style={{
-                                content: {
-                                    maxWidth: '600px',
-                                    margin: 'auto',
-                                    padding: '20px'
-                                }
-                            }}
-                        >
-                            <h2>ใบเงินเดือน</h2>
-
-                            <div>
-                                <p>User ID: {payslip?.userId ?? '-'}</p>
-                                <p>เดือน/ปี: {payslip?.month ?? '-'} / {payslip?.year ?? '-'}</p>
-                                <p>ฐานเงินเดือน: {payslip?.base_salary?.toLocaleString() ?? '-'}</p>
-                                <p>ประกันสังคม: {payslip?.social_tax?.toLocaleString() ?? '-'}</p>
-                                <p>OT รวม: {payslip?.total_ot ?? '-'}</p>
-                                <p>โบนัสรวม: {payslip?.total_bonus ?? '-'}</p>
-                                <p>เงินเดือนคำนวณ: {payslip?.calculated_salary?.toLocaleString() ?? '-'}</p>
-                                <p>
-                                    วันที่สร้าง:{" "}
-                                    {payslip?.created_at
-                                        ? new Date(payslip.created_at).toLocaleString()
-                                        : '-'}
-                                </p>
-                            </div>
-
-                            <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                                <button onClick={() => window.print()}>พิมพ์ PDF</button>
-                                <button onClick={() => setShowPayslipModal(false)}>ปิด</button>
-                            </div>
-                        </Modal>
+                <div className={style.leaverequest}>
+                    <div className={style.leaveheader}>
+                        <h2>ส่งคำขอการลา</h2>
                     </div>
-                )}
+
+                    <div className={style.leaveform}>
+                        <label>
+                            ประเภทการลา:
+                            <select value={leaveType} onChange={(e) => setLeaveType(e.target.value)}>
+                                <option value="annual">ลาประจำปี</option>
+                                <option value="sick">ลาป่วย</option>
+                                <option value="casual">ลากิจ</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            วันที่เริ่ม:
+                            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} min={new Date().toISOString().split('T')[0]} />
+                        </label>
+
+                        <label>
+                            วันที่สิ้นสุด:
+                            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate || new Date().toISOString().split('T')[0]} />
+                        </label>
+
+                        <label>
+                            จำนวนวันลา:
+                            <input
+                                type="number"
+                                value={dayRequested}
+                                readOnly
+                            />
+                        </label>
+                        <button onClick={handleLeaveSubmit}>ส่งคำขอการลา</button>
+                    </div>
+                </div>
+
+                <div className={style.myleave}>
+                    <h2>สถานะการลาของฉัน</h2>
+
+                    {myLeaves.length === 0 ? (
+                        <p>ยังไม่มีรายการลา</p>
+                    ) : (
+                        myLeaves.map(item => (
+                            <div key={item._id} className={style.leaveItem}>
+                                <p>ประเภท: {item.leave_type}</p>
+                                <p>
+                                    วันที่:{" "}
+                                    {new Date(item.start_date).toLocaleDateString()} -{" "}
+                                    {new Date(item.end_date).toLocaleDateString()}
+                                </p>
+                                <p>จำนวนวัน: {item.day_requested}</p>
+
+                                <p>
+                                    สถานะ:{" "}
+                                    <span
+                                        style={{
+                                            color:
+                                                item.status === 'approved'
+                                                    ? 'green'
+                                                    : item.status === 'rejected'
+                                                        ? 'red'
+                                                        : 'orange',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        {item.status === 'pending'
+                                            ? 'รออนุมัติ'
+                                            : item.status === 'approved'
+                                                ? 'อนุมัติแล้ว'
+                                                : 'ถูกปฏิเสธ'}
+                                    </span>
+                                </p>
+
+                                <hr />
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                <div className={style.payslip}>
+                    <div className={style.slipheader}>
+
+                        <h2>ใบเงินเดือน</h2>
+                    </div>
+                    <div className={style.slipFilters}>
+                        <label>
+                            เดือน:
+                            <select value={selectedMonth} onChange={e => setSelectedMonth(parseInt(e.target.value))}>
+                                {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                    <option key={m} value={m}>{m}</option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <label>
+                            ปี:
+                            <select value={selectedYear} onChange={e => setSelectedYear(parseInt(e.target.value))}>
+                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                                    <option key={y} value={y}>{y}</option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
+                    {loading ? (
+                        <p>Loading payslip</p>
+                    ) : error ? (
+                        <p>{error}</p>
+                    ) : !payslip ? (
+                        <p>No data</p>
+                    ) : (
+                        <div className={style.slipDetails}>
+                            <p className={style.textp}>เงินเดือนพื้นฐาน: {payslip.base_salary?.toLocaleString() ?? 'null'} บาท</p>
+                            <p>OT: {payslip?.total_ot ? payslip.total_ot.toFixed(2) : '0.00'} บาท</p>
+                            <p className={style.textp}>
+                                เงินเดือนสุทธิ: {payslip.calculated_salary?.toLocaleString() ?? '-'} บาท
+                            </p>
+                            <button className={style.textp}
+                                disabled={!payslip}
+                                style={{ marginTop: '10px', padding: '7px 10px', cursor: 'pointer' }}
+                                onClick={() => setShowPayslipModal(true)}
+                            >
+                                ดูเพิ่มเติม / พิมพ์
+                            </button>
+                            <Modal
+                                isOpen={showPayslipModal}
+                                onRequestClose={() => setShowPayslipModal(false)}
+                                contentLabel="Payslip Detail"
+                                className={style.slipModalContent}
+                                overlayClassName={style.modalOverlay}
+                            >
+                                <div ref={contentRef} className={style.slipContent}>
+                                    <div className={style.slipHeader}>
+                                        <h2>ใบเงินเดือน (Payslip)</h2>
+                                        <p className={style.subTitle}>ประจำเดือน {payslip?.month}/{payslip?.year}</p>
+                                    </div>
+
+                                    <div className={style.slipBody}>
+                                        <div className={style.slipRow}>
+                                            <span>รหัสพนักงาน:</span>
+                                            <strong>{payslip?.userId ?? '-'}</strong>
+                                        </div>
+                                        <hr />
+                                        <div className={style.slipRow}>
+                                            <span>ฐานเงินเดือน:</span>
+                                            <span>{payslip?.base_salary?.toLocaleString() ?? '0'} บาท</span>
+                                        </div>
+                                        <div className={style.slipRow}>
+                                            <span>ค่าล่วงเวลา (OT):</span>
+                                            <span>{payslip?.total_ot?.toLocaleString() ?? '0'} บาท</span>
+                                        </div>
+                                        <div className={style.slipRow}>
+                                            <span>เงินโบนัส:</span>
+                                            <span>{payslip?.total_bonus?.toLocaleString() ?? '0'} บาท</span>
+                                        </div>
+                                        <div className={style.slipRow}>
+                                            <span>หักค่าต่างๆ:</span>
+                                            <span>-{payslip?.other_deduction?.toLocaleString() ?? '0'} บาท</span>
+                                        </div>
+                                        <div className={style.slipRow}>
+                                            <span>ประกันสังคม:</span>
+                                            <span className={style.deduction}>- {payslip?.social_tax?.toLocaleString() ?? '0'} บาท</span>
+                                        </div>
+                                        <hr />
+                                        <div className={`${style.slipRow} ${style.totalRow}`}>
+                                            <span>เงินเดือนสุทธิ:</span>
+                                            <strong>{payslip?.calculated_salary?.toLocaleString() ?? '0'} บาท</strong>
+                                        </div>
+
+                                        <p className={style.timestamp}>
+                                            วันที่ออกเอกสาร: {payslip?.created_at ? new Date(payslip.created_at).toLocaleString('th-TH') : '-'}
+                                        </p>
+                                    </div>
+
+                                    <div className={style.slipActions}>
+                                        <button className={style.printBtn} onClick={handlePrint}>พิมพ์ใบเงินเดือน</button>
+                                        <button className={style.closeBtn} onClick={() => setShowPayslipModal(false)}>ปิด</button>
+                                    </div>
+                                </div>
+                            </Modal>
+                        </div>
+                    )}
+                </div>
             </div>
         </div >
     );

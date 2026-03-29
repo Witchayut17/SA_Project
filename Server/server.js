@@ -92,6 +92,7 @@ const finalSalarySchema = new mongoose.Schema({
     year: { type: Number, required: true },
     total_ot: { type: Number, required: true },
     total_bonus: { type: Number, required: true },
+    other_deduction: { type: Number, default: 0 },
     calculated_salary: { type: Number, required: true },
     created_at: { type: Date, default: Date.now }
 }, { versionKey: false })
@@ -149,10 +150,18 @@ app.get('/employee/:userId', async (req, res) => {
 app.post('/attendance/checkin', async (req, res) => {
     try {
         const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+
         const now = new Date();
+        // Use local date string to match your Cron job and schema expectations
         const todayStr = now.toISOString().split('T')[0];
 
+        // 1. Check if record exists
         const existing = await Attendance.findOne({ userId, date: todayStr });
+
         if (existing) {
             return res.status(200).json({
                 message: 'คุณเช็คอินไปแล้ว',
@@ -161,17 +170,20 @@ app.post('/attendance/checkin', async (req, res) => {
             });
         }
 
+        // 2. Determine status (8 AM threshold)
         let status = 'Present';
         if (now.getHours() >= 8) {
             status = 'Late';
         }
 
+        // 3. Create new record
         const attendance = new Attendance({
             userId,
             date: todayStr,
             checkin_time: now,
             status: status
         });
+
         await attendance.save();
 
         res.status(200).json({
@@ -179,8 +191,17 @@ app.post('/attendance/checkin', async (req, res) => {
             status,
             checkin_time: now
         });
+
     } catch (err) {
-        res.status(500).json({ message: 'Internal server error' });
+        // CRITICAL: Log the error to your console so you can see why it failed
+        console.error('Check-in Error Detail:', err);
+
+        // Handle the specific MongoDB Duplicate Key error (Code 11000)
+        if (err.code === 11000) {
+            return res.status(400).json({ message: 'คุณได้เช็คอินของวันนี้ไปเรียบร้อยแล้ว' });
+        }
+
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 });
 
@@ -321,12 +342,12 @@ app.post('/ot/apply', async (req, res) => {
 
         const existing = await OT_Employee.findOne({ userId, ot_id });
         if (existing) {
-            return res.status(400).json({ message: 'You already applied for this OT' });
+            return res.status(400).json({ message: 'คุณสมัคร OT นี้ไปแล้ว' });
         }
 
         const otDoc = await OT.findById(ot_id);
         if (!otDoc) {
-            return res.status(404).json({ message: 'OT not found' });
+            return res.status(404).json({ message: 'ไม่พบ OT' });
         }
 
         const currentCount = await OT_Employee.countDocuments({ ot_id });
@@ -355,54 +376,68 @@ app.post('/ot/apply', async (req, res) => {
 app.get('/my-ot/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
+        const myOt = await OT_Employee.find({ userId }).populate('ot_id').lean();
 
-        const myOt = await OT_Employee.find({ userId })
-            .populate('ot_id')
-            .lean();
+        const formatted = myOt.map(item => {
+            const otInfo = item.ot_id;
+            let endTime = null;
 
-        const formatted = myOt.map(item => ({
-            _id: item._id,
-            checked_in: item.checked_in ? item.checked_in.toISOString() : null,
-            checked_out: item.checked_out ? item.checked_out.toISOString() : null,
-            ot: item.ot_id
-        }));
+            if (otInfo?.start_time && otInfo?.hours) {
+                const start = new Date(otInfo.start_time);
+                endTime = new Date(start.getTime() + (otInfo.hours * 60 * 60 * 1000));
+            }
+
+            return {
+                _id: item._id,
+                ot_id: otInfo?._id,
+                ot_date: otInfo?.date,
+                description: otInfo?.description,
+                hours: otInfo?.hours,
+                ot_rate: otInfo?.ot_rate,
+                start_time: otInfo?.start_time ? otInfo.start_time.toISOString() : null,
+                end_time: endTime ? endTime.toISOString() : null,
+
+                checked_in: item.checked_in ? item.checked_in.toISOString() : null,
+                checked_out: item.checked_out ? item.checked_out.toISOString() : null,
+            };
+        });
 
         res.json(formatted);
-
     } catch (err) {
-        console.error('Get My OT Error:', err);
+        console.error(err);
         res.status(500).json({ message: 'Internal server error' });
     }
 });
 
 app.post('/ot/checkin', async (req, res) => {
     try {
-        const { userId, otId } = req.body;
-        if (!userId || !otId) return res.status(400).json({ message: 'Missing data' });
+        // แก้จาก otId เป็น ot_id ให้ตรงกับที่ Body ส่งมา
+        const { userId, ot_id } = req.body;
 
-        const otEmp = await OT_Employee.findOne({ userId, ot_id: otId });
-        if (!otEmp) return res.status(404).json({ message: 'OT not found for user' });
+        console.log("--- Check-in Debug ---");
+        console.log("Body received:", req.body);
+
+        if (!userId || !ot_id) {
+            return res.status(400).json({ message: 'Missing data' });
+        }
+
+        const otEmp = await OT_Employee.findOne({ userId, ot_id: ot_id });
+
+        if (!otEmp) {
+            return res.status(404).json({ message: 'OT not found for user' });
+        }
 
         if (otEmp.checked_in) {
-            return res.json({
-                message: 'คุณเช็คอินแล้ว',
-                checkin_time: otEmp.checked_in.toISOString(),
-                _id: otEmp._id
-            });
+            return res.json({ message: 'คุณเช็คอินแล้ว', checkin_time: otEmp.checked_in });
         }
 
         otEmp.checked_in = new Date();
         await otEmp.save();
-
-        res.json({
-            message: 'เช็คอินเรียบร้อย',
-            checkin_time: otEmp.checked_in.toISOString(),
-            _id: otEmp._id
-        });
+        res.json({ message: 'เช็คอินเรียบร้อย', checkin_time: otEmp.checked_in });
 
     } catch (err) {
-        console.error('OT Check-in Error:', err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('OT Check-in Server Error:', err);
+        res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
 
@@ -463,7 +498,7 @@ app.post('/leaverequest', async (req, res) => {
 
         const remaining = leaveRight.total_days - leaveRight.used_days;
         if (remaining < day_requested) {
-            return res.status(400).json({ message: `ลาเกินจำนวนสิทธิ์ที่มี. สิทธิ์คงเหลือ: ${remaining}` });
+            return res.status(400).json({ message: `ลาเกินจำนวนสิทธิ์ที่มี. สิทธิ์คงเหลือ : ${remaining}` });
         }
 
         const leaveReq = await LeaveRequest.create({
@@ -631,10 +666,23 @@ app.get('/attendance/:userId', async (req, res) => {
 
 app.post('/finalsalary', async (req, res) => {
     try {
-        const data = await FinalSalary.create(req.body);
+        const { basesal_id, month, year, total_ot, total_bonus, other_deduction, calculated_salary } = req.body;
+
+        const data = await FinalSalary.findOneAndUpdate(
+            { basesal_id, month, year },
+            {
+                total_ot,
+                total_bonus,
+                other_deduction: other_deduction || 0,
+                calculated_salary,
+                created_at: new Date()
+            },
+            { upsert: true, new: true }
+        );
         res.json(data);
     } catch (err) {
-        res.status(500).json({ message: 'error' });
+        console.error('Save FinalSalary Error:', err);
+        res.status(500).json({ message: 'บันทึกข้อมูลไม่สำเร็จ' });
     }
 });
 
@@ -757,10 +805,20 @@ app.get('/payslip-full/:userId', async (req, res) => {
 
         otEmployees.forEach(otEmp => {
             if (otEmp.ot_id && otEmp.checked_in && otEmp.checked_out) {
-                const otHours = otEmp.ot_id.hours;
-                const otRate = otEmp.ot_id.ot_rate;
 
-                total_ot += (base_salary / 20 / 8) * otHours * otRate;
+                const checkIn = new Date(otEmp.checked_in);
+                const checkOut = new Date(otEmp.checked_out);
+
+                let actualHours = (checkOut - checkIn) / (1000 * 60 * 60);
+
+                actualHours = Math.round(actualHours * 100) / 100;
+
+                const otRate = otEmp.ot_id.ot_rate || 1.5;
+
+                const hourlyRate = (base_salary / 20 / 8);
+                total_ot += hourlyRate * actualHours * otRate;
+
+                console.log(`User: ${userId} | OT ID: ${otEmp.ot_id._id} | ทำจริง: ${actualHours} ชม. | ได้เงิน: ${hourlyRate * actualHours * otRate}`);
             }
         });
 
@@ -771,10 +829,11 @@ app.get('/payslip-full/:userId', async (req, res) => {
         }).lean();
 
         const total_bonus = finalSalaryDoc?.total_bonus ?? 0;
+        const other_deduction = finalSalaryDoc?.other_deduction ?? 0;
 
         const calculated_salary = finalSalaryDoc
             ? finalSalaryDoc.calculated_salary
-            : base_salary + total_ot - social_tax + total_bonus;
+            : base_salary + total_ot - social_tax + total_bonus - other_deduction;
 
         res.json({
             userId,
@@ -782,6 +841,7 @@ app.get('/payslip-full/:userId', async (req, res) => {
             social_tax,
             total_ot,
             total_bonus,
+            other_deduction,
             calculated_salary,
             month,
             year,

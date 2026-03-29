@@ -9,6 +9,7 @@ import Modal from 'react-modal';
 const Accountantdb = ({ userId }) => {
 
     const [employee, setEmployee] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
     const [employees, setEmployees] = useState([]);
     const [formData, setFormData] = useState(null);
     const [leaveType, setLeaveType] = useState('annual');
@@ -31,10 +32,52 @@ const Accountantdb = ({ userId }) => {
         year: new Date().getFullYear(),
         total_ot: 0,
         total_bonus: 0,
+        other_deduction: 0,
         calculated_salary: 0
     });
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
     const loggedInUserId = localStorage.getItem('userId');
+
+    const fetchMyOT = async () => {
+        if (!userId) return;
+        try {
+            const res = await fetch(`http://localhost:1704/my-ot/${userId}`);
+            const data = await res.json();
+
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+
+            const todayOT = data
+                .filter(item => {
+                    const itemDate = item.ot_date ? item.ot_date.split('T')[0] : "";
+                    return itemDate === todayString;
+                })
+                .map(item => ({
+                    ...item,
+                    original_ot_id: item.ot_id || item.ot?._id || item._id,
+                    display_hours: item.hours || '-',
+                    display_hours: item.hours || '-',
+                    display_start: item.start_time || null,
+                    display_end: item.end_time || null,
+                    display_desc: item.description || '-',
+                    display_max: item.max_people || '-',
+                    display_rate: item.ot_rate ?
+                        (item.ot_rate.$numberDecimal ? parseFloat(item.ot_rate.$numberDecimal) : item.ot_rate)
+                        : '-',
+                    checked_in: item.checked_in
+                        ? new Date(item.checked_in).toLocaleTimeString('en-TH', { hour12: false, hour: '2-digit', minute: '2-digit' })
+                        : '-',
+                    checked_out: item.checked_out
+                        ? new Date(item.checked_out).toLocaleTimeString('en-TH', { hour12: false, hour: '2-digit', minute: '2-digit' })
+                        : '-'
+                }));
+
+            setMyOt(todayOT);
+        } catch (err) {
+            console.error("Fetch My OT Error:", err);
+        }
+    };
 
     useEffect(() => {
         const fetchMyLeaves = async () => {
@@ -94,6 +137,7 @@ const Accountantdb = ({ userId }) => {
                     year: slipData.year,
                     total_ot: slipData.total_ot,
                     total_bonus: slipData.total_bonus,
+                    other_deduction: slipData.other_deduction,
                     calculated_salary: slipData.calculated_salary
                 })
             });
@@ -138,14 +182,16 @@ const Accountantdb = ({ userId }) => {
             const res = await fetch('http://localhost:1704/ot/checkin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: loggedInUserId, otId })
+                body: JSON.stringify({
+                    userId: loggedInUserId,
+                    ot_id: otId
+                })
             });
             const data = await res.json();
 
             if (res.ok) {
-                const time = parseDate(data.checkin_time);
-                alert(data.checkin_time ? `เช็คอิน OT เรียบร้อย เวลา: ${time}` : `คุณเช็คอินแล้วเวลา ${time}`);
-                setMyOt(prev => prev.map(o => o._id === data._id ? { ...o, checked_in: time } : o));
+                alert("เช็คอิน OT เรียบร้อย");
+                fetchMyOT();
             } else {
                 alert(data.message);
             }
@@ -154,6 +200,7 @@ const Accountantdb = ({ userId }) => {
             alert('เกิดข้อผิดพลาด');
         }
     };
+
     const handleCheckoutOT = async (otId) => {
         if (!loggedInUserId) return alert("User not logged in!");
         try {
@@ -164,9 +211,8 @@ const Accountantdb = ({ userId }) => {
             });
             const data = await res.json();
             if (res.ok) {
-                const time = parseDate(data.checkout_time);
-                alert(`เช็คเอาท์ OT เรียบร้อย เวลา: ${time}`);
-                setMyOt(prev => prev.map(o => o._id === data._id ? { ...o, checked_out: time } : o));
+                alert("เช็คเอาท์ OT เรียบร้อย");
+                fetchMyOT();
             } else {
                 alert(data.message);
             }
@@ -211,27 +257,6 @@ const Accountantdb = ({ userId }) => {
     };
 
     useEffect(() => {
-        const fetchMyOT = async () => {
-            try {
-                const res = await fetch(`http://localhost:1704/my-ot/${userId}`);
-                const data = await res.json();
-
-                const today = new Date();
-                const todayString = today.toISOString().split('T')[0];
-
-                const todayOT = data
-                    .filter(item => item.ot_date?.split('T')[0] === todayString)
-                    .map(item => ({
-                        ...item,
-                        checked_in: item.checked_in ? new Date(item.checked_in).toLocaleTimeString('en-TH', { hour12: false }) : '-',
-                        checked_out: item.checked_out ? new Date(item.checked_out).toLocaleTimeString('en-TH', { hour12: false }) : '-'
-                    }));
-
-                setMyOt(todayOT);
-            } catch (err) {
-                console.error(err);
-            }
-        };
         fetchMyOT();
     }, [userId]);
 
@@ -307,7 +332,7 @@ const Accountantdb = ({ userId }) => {
     const calculateSalary = async (month, year, bonus) => {
         try {
             const [otRes, salaryRes] = await Promise.all([
-                fetch(`http://localhost:1704/my-ot/${selectedUserId}`), // OT records for the employee
+                fetch(`http://localhost:1704/my-ot/${selectedUserId}`),
                 fetch(`http://localhost:1704/salary/${selectedUserId}`)
             ]);
 
@@ -347,7 +372,7 @@ const Accountantdb = ({ userId }) => {
                 return sum + hoursWorked * hourlyRate * otRate;
             }, 0);
 
-            const calculatedSalary = baseSalary - socialTax + totalOTAmount + bonus;
+            const calculatedSalary = baseSalary - socialTax + totalOTAmount + bonus - (slipData.other_deduction || 0);
 
             setSlipData(prev => ({
                 ...prev,
@@ -399,12 +424,12 @@ const Accountantdb = ({ userId }) => {
         if (isSlipModalOpen && selectedUserId) {
             calculateSalary(slipData.month, slipData.year, slipData.total_bonus);
         }
-    }, [slipData.month, slipData.year, slipData.total_bonus, isSlipModalOpen, selectedUserId]);
+    }, [isSlipModalOpen, selectedUserId, slipData.month, slipData.year, slipData.total_bonus, slipData.other_deduction]);
 
     const fetchReport = async () => {
         try {
             const [attendanceRes, otRes, salaryRes] = await Promise.all([
-                fetch(`http://localhost:1704/attendance/${selectedUserId}?month=${selectedMonth}`),
+                fetch(`http://localhost:1704/attendance/${selectedUserId}?month=${selectedMonth}&year=${selectedYear}`),
                 fetch(`http://localhost:1704/my-ot/${selectedUserId}`),
                 fetch(`http://localhost:1704/salary/${selectedUserId}`)
             ]);
@@ -445,7 +470,7 @@ const Accountantdb = ({ userId }) => {
                 if (item.checked_in && item.checked_out) {
                     const start = new Date(item.checked_in);
                     const end = new Date(item.checked_out);
-                    const hours = (end - start) / (1000 * 60 * 60); // hours
+                    const hours = (end - start) / (1000 * 60 * 60);
                     return sum + hours;
                 }
                 return sum;
@@ -460,6 +485,7 @@ const Accountantdb = ({ userId }) => {
                 totalOtHours: totalOT,
                 socialTax,
                 bonus: finalSalaryData?.total_bonus || 0,
+                other_deduction: finalSalaryData?.other_deduction || 0,
                 netSalary: finalSalaryData?.calculated_salary || 0
             });
 
@@ -521,7 +547,6 @@ const Accountantdb = ({ userId }) => {
             })
             .catch(err => console.error(err));
     }, [userId]);
-    if (!employee || !formData) return <p>Loading...</p>;
 
     const handleCheckIn = async () => {
         if (!loggedInUserId) return alert("User not logged in!");
@@ -561,6 +586,51 @@ const Accountantdb = ({ userId }) => {
         localStorage.removeItem('token');
         localStorage.removeItem('userId');
         window.location.href = '/';
+    };
+
+    useEffect(() => {
+        fetch(`http://localhost:1704/employee/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                setEmployee(data);
+                setFormData({
+                    name: data.name,
+                    lastname: data.lastname,
+                    tel: data.tel,
+                    age: data.age,
+                    address: data.address
+                });
+            })
+            .catch(err => console.error(err));
+    }, [userId]);
+
+    if (!employee || !formData) return <p>Loading...</p>;
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSave = async () => {
+        try {
+            const res = await fetch(`http://localhost:1704/employee/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (res.ok) {
+                alert('ข้อมูลอัปเดตเรียบร้อยแล้ว');
+                setEmployee(prev => ({ ...prev, ...formData }));
+                setIsEditing(false);
+            } else {
+                const data = await res.json();
+                alert(`Error: ${data.message}`);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Something went wrong');
+        }
     };
 
     return (
@@ -626,6 +696,44 @@ const Accountantdb = ({ userId }) => {
                     </label>
                     <button onClick={handleLeaveSubmit}>ส่งคำขอการลา</button>
                 </div>
+            </div>
+
+            <div className={style.profilesection}>
+                <div className={style.profileheader}>
+                    <FontAwesomeIcon icon={faUser} className={style.profileIcon} />
+                    <h2>ข้อมูลส่วนบุคคล</h2>
+                </div>
+
+                <div className={style.profileinfo}>
+                    {isEditing ? (
+                        <>
+                            <input name="name" value={formData.name} onChange={handleChange} placeholder='ชื่อจริงไม่ต้องมีคำนำหน้า' />
+                            <input name="lastname" value={formData.lastname} onChange={handleChange} placeholder='นามสกุล' />
+                            <input name="tel" value={formData.tel} onChange={handleChange} placeholder='เบอร์โทร' />
+                            <input name="age" type="number" value={formData.age} onChange={handleChange} placeholder='อายุ' />
+                            <input name="address" value={formData.address} onChange={handleChange} placeholder='ที่อยู่' />
+                        </>
+                    ) : (
+                        <>
+                            <h2>ชื่อ : {employee.name}</h2>
+                            <h2>นามสกุล : {employee.lastname}</h2>
+                            <h2>เบอร์โทรศัพท์ : {employee.tel}</h2>
+                            <h2>อายุ : {employee.age}</h2>
+                            <h2>ที่อยู่ : {employee.address}</h2>
+                        </>
+                    )}
+                </div>
+
+                {isEditing ? (
+                    <div className={style.btncontainer} style={{ marginTop: '10px' }}>
+                        <button onClick={handleSave} className={style.saveBtn}>บันทึก</button>
+                        <button onClick={() => setIsEditing(false)} className={style.cancelBtn}>ยกเลิก</button>
+                    </div>
+                ) : (
+                    <button className={style.editBtn} onClick={() => setIsEditing(true)}>
+                        แก้ไขข้อมูล
+                    </button>
+                )}
             </div>
 
             <div className={style.myleave}>
@@ -714,10 +822,10 @@ const Accountantdb = ({ userId }) => {
                         <div key={item._id} className={style.otItem}>
                             <div className={style.otSummary}>
                                 <h3>
-                                    จำนวน: {item.ot?.hours} ชม. เวลา {" "}
-                                    {parseDate(item.ot?.start_time)}
+                                    จำนวน: {item.display_hours} ชม. เวลา {" "}
+                                    {parseDate(item.display_start)}
                                     {" - "}
-                                    {parseDate(item.ot?.end_time)}
+                                    {parseDate(item.display_end)}
                                 </h3>
 
                                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -729,13 +837,13 @@ const Accountantdb = ({ userId }) => {
 
                             {expandedOtIds.has(item._id) && (
                                 <div className={style.otDetails}>
-                                    <p>รายละเอียด: {item.ot?.description}</p>
-                                    <p>จำนวนคนสูงสุด: {item.ot?.max_people}</p>
-                                    <p>OT Rate: {item.ot?.ot_rate?.$numberDecimal ? parseFloat(item.ot.ot_rate.$numberDecimal) : item.ot?.ot_rate}</p>
+                                    <p>รายละเอียด: {item.display_desc}</p>
+                                    <p>จำนวนคนสูงสุด: {item.display_max}</p>
+                                    <p>OT Rate: {item.display_rate}</p>
                                     <div className={style.otAction}>
                                         <span>Check-in: {item.checked_in}</span>
                                         <button
-                                            onClick={() => handleCheckInOT(item.ot._id)}
+                                            onClick={() => handleCheckInOT(item.original_ot_id)}
                                             disabled={item.checked_in !== '-'}
                                         >
                                             เข้า OT
@@ -744,7 +852,7 @@ const Accountantdb = ({ userId }) => {
                                     <div className={style.otAction}>
                                         <span>Check-out: {item.checked_out}</span>
                                         <button
-                                            onClick={() => handleCheckoutOT(item.ot._id)}
+                                            onClick={() => handleCheckoutOT(item.original_ot_id)}
                                             disabled={item.checked_out !== '-'}
                                         >
                                             ออก OT
@@ -767,7 +875,7 @@ const Accountantdb = ({ userId }) => {
                     <option value="">-- เลือกพนักงาน --</option>
                     {employees.map(emp => (
                         <option key={emp.userId} value={emp.userId}>
-                            {emp.name} {emp.lastname} ({userId})
+                            {emp.name} {emp.lastname} ({emp.userId})
                         </option>
                     ))}
                 </select>
@@ -781,114 +889,150 @@ const Accountantdb = ({ userId }) => {
                         พิมพ์สลิปเงินเดือน
                     </button>
                 </div>
-                <Modal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)}>
-                    <h2>รายงานพนักงาน</h2>
+                <Modal
+                    isOpen={isModalOpen}
+                    onRequestClose={() => setIsModalOpen(false)}
+                    className={style.modalContent}
+                    overlayClassName={style.modalOverlay}
+                >
+                    <div className={style.modalBody}>
+                        <h2>รายงานพนักงาน</h2>
 
-                    <label>
-                        เลือกเดือน:
-                        <select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))}>
-                            {[...Array(12)].map((_, i) => (
-                                <option key={i + 1} value={i + 1}>{i + 1}</option>
-                            ))}
-                        </select>
-                    </label>
-
-                    {selectedEmployee && reportData && (
-                        <div>
-                            <p>
-                                ชื่อ: {selectedEmployee.name} {selectedEmployee.lastname}
-                            </p>
-
-                            <p>
-                                จำนวนวันมาทำงาน | Present | Absent | Late | Leave
-                            </p>
-                            <p>
-                                {reportData.attendanceCount} |
-                                {reportData.present} |
-                                {reportData.absent} |
-                                {reportData.late} |
-                                {reportData.leave}
-                            </p>
-                            <p>
-                                OT รวม: {reportData.totalOtHours.toFixed(2)} ชั่วโมง
-                            </p>
-
-                            <p>
-                                ประกันสังคม: {reportData.socialTax}
-                            </p>
-
-                            <p>
-                                โบนัส: {reportData?.bonus != null ? reportData.bonus : 0}
-                            </p>
-
-                            <p>
-                                เงินเดือนสุทธิ: {reportData.netSalary || 0}
-                            </p>
+                        <div className={style.modalField}>
+                            <label>เลือกเดือน:</label>
+                            <select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))}>
+                                {[...Array(12)].map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                ))}
+                            </select>
                         </div>
-                    )}
+                        <div className={style.modalField}>
+                            <label>เลือกปี:</label>
+                            <input
+                                type="number"
+                                value={selectedYear || new Date().getFullYear()}
+                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                            />
+                        </div>
 
-                    <button onClick={() => setIsModalOpen(false)}>ปิด</button>
+                        {selectedEmployee && reportData && (
+                            <div className={style.reportDetails}>
+                                <p><strong>ชื่อ:</strong> {selectedEmployee.name} {selectedEmployee.lastname}</p>
+
+                                <div className={style.attendanceBox}>
+                                    <h4>จำนวนวันมาทำงาน</h4>
+                                    <p className={style.totalCount}>ทั้งหมด {reportData.attendanceCount} วัน</p>
+                                    <div className={style.statsGrid}>
+                                        <span>มา {reportData.present}</span>
+                                        <span>ขาด {reportData.absent}</span>
+                                        <span>สาย {reportData.late}</span>
+                                        <span>ลา {reportData.leave}</span>
+                                    </div>
+                                </div>
+
+                                <div className={style.financialInfo}>
+                                    <p>OT รวม: <span>{reportData.totalOtHours.toFixed(2)} ชม.</span></p>
+                                    <p>ประกันสังคม: <span>{reportData.socialTax}</span></p>
+                                    <p>โบนัส: <span>{reportData?.bonus || 0}</span></p>
+                                    <p>หักค่าต่างๆ: <span>-{reportData?.other_deduction || 0}</span></p>
+                                    <p className={style.netSalary}>เงินเดือนสุทธิ: <span>{reportData.netSalary || 0}</span></p>
+                                </div>
+                            </div>
+                        )}
+
+                        <button className={style.closeModalBtn} onClick={() => setIsModalOpen(false)}>ปิด</button>
+                    </div>
                 </Modal>
-                <Modal isOpen={isSlipModalOpen} onRequestClose={() => setIsSlipModalOpen(false)}>
-                    <h2>สร้างสลิปเงินเดือน</h2>
 
-                    <label>
-                        เดือน:
-                        <select
-                            value={slipData.month}
-                            onChange={(e) =>
-                                setSlipData({ ...slipData, month: parseInt(e.target.value) })
-                            }
-                        >
-                            {[...Array(12)].map((_, i) => (
-                                <option key={i + 1} value={i + 1}>{i + 1}</option>
-                            ))}
-                        </select>
-                    </label>
+                <Modal
+                    isOpen={isSlipModalOpen}
+                    onRequestClose={() => setIsSlipModalOpen(false)}
+                    className={style.modalContent} // ใช้ class เดียวกับ modal รายงาน
+                    overlayClassName={style.modalOverlay}
+                >
+                    <div className={style.modalBody}>
+                        <h2>สร้างสลิปเงินเดือน</h2>
 
-                    <label>
-                        ปี:
-                        <input
-                            type="number"
-                            value={slipData.year}
-                            onChange={(e) =>
-                                setSlipData({ ...slipData, year: parseInt(e.target.value) })
-                            }
-                        />
-                    </label>
+                        <div className={style.modalForm}>
+                            <label>
+                                เดือน:
+                                <select
+                                    value={slipData.month}
+                                    onChange={(e) =>
+                                        setSlipData({ ...slipData, month: parseInt(e.target.value) })
+                                    }
+                                >
+                                    {[...Array(12)].map((_, i) => (
+                                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                    ))}
+                                </select>
+                            </label>
 
-                    <label>
-                        OT รวม:
-                        <input
-                            type="number"
-                            value={isNaN(slipData.total_ot) ? 0 : Number(slipData.total_ot.toFixed(2))}
-                            readOnly
-                        />
-                    </label>
+                            <label>
+                                ปี:
+                                <input
+                                    type="number"
+                                    value={slipData.year}
+                                    onChange={(e) =>
+                                        setSlipData({ ...slipData, year: parseInt(e.target.value) })
+                                    }
+                                />
+                            </label>
 
-                    <label>
-                        โบนัส:
-                        <input
-                            type="number"
-                            value={slipData.total_bonus}
-                            onChange={(e) =>
-                                setSlipData({ ...slipData, total_bonus: parseFloat(e.target.value) || 0 })
-                            }
-                        />
-                    </label>
+                            <div className={style.divider}></div>
 
-                    <label>
-                        เงินเดือนสุทธิ:
-                        <input type="number" value={slipData.calculated_salary.toFixed(2)} readOnly />
-                    </label>
+                            <label className={style.readOnlyField}>
+                                OT รวม (ชั่วโมง):
+                                <input
+                                    type="number"
+                                    value={isNaN(slipData.total_ot) ? 0 : Number(slipData.total_ot.toFixed(2))}
+                                    readOnly
+                                />
+                            </label>
 
-                    <button
-                        onClick={handleSaveSlip}
-                        disabled={isSlipSaved}
-                    >
-                        บันทึก
-                    </button>
-                    <button onClick={() => setIsSlipModalOpen(false)}>ปิด</button>
+                            <label>
+                                โบนัสพิเศษ:
+                                <input
+                                    type="number"
+                                    placeholder="0.00"
+                                    value={slipData.total_bonus}
+                                    onChange={(e) =>
+                                        setSlipData({ ...slipData, total_bonus: parseFloat(e.target.value) || 0 })
+                                    }
+                                />
+                            </label>
+
+                            <label>
+                                หักอื่นๆ (ขาด/สาย/วินัย):
+                                <input
+                                    type="number"
+                                    placeholder="0.00"
+                                    value={slipData.other_deduction || 0}
+                                    onChange={(e) =>
+                                        setSlipData({ ...slipData, other_deduction: parseFloat(e.target.value) || 0 })
+                                    }
+                                />
+                            </label>
+
+                            <label className={style.highlightField}>
+                                เงินเดือนสุทธิ:
+                                <input type="number" value={slipData.calculated_salary.toFixed(2)} readOnly />
+                            </label>
+                        </div>
+
+                        <div className={style.modalActions}>
+                            <button
+                                className={style.saveBtn}
+                                onClick={handleSaveSlip}
+                                disabled={isSlipSaved}
+                            >
+                                {isSlipSaved ? 'บันทึกสำเร็จแล้ว' : 'บันทึกสลิป'}
+                            </button>
+                            <button className={style.closeModalBtn} onClick={() => setIsSlipModalOpen(false)}>
+                                ปิดหน้าต่าง
+                            </button>
+                        </div>
+                    </div>
                 </Modal>
             </div>
         </div>

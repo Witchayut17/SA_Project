@@ -60,6 +60,14 @@
     left: 900px;
 }
 
+.clockcontainer {
+    margin-left: 35px;
+    margin-top: 50px;
+    display: flex;
+    justify-content: flex-start;
+    text-align: center;
+}
+
 .checker {
     margin-top: -15px;
     display: flex;
@@ -84,16 +92,20 @@ button:disabled {
     cursor: not-allowed;
 }
 
-.clockcontainer {
-    margin-left: 35px;
-    margin-top: 70px;
+.checkincontainer {
+    max-width: 120px;
     display: flex;
-    justify-content: flex-start;
-    text-align: center;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background-color: #28a745;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
 }
 
 .checkoutcontainer {
-    max-width: 100px;
+    max-width: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -114,7 +126,7 @@ button:disabled {
 }
 
 .checkincontainer {
-    max-width: 100px;
+    max-width: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -135,9 +147,9 @@ button:disabled {
 
 .leaverequest {
     position: absolute;
-    top: 550px;
-    right: 300px;
+    top: 230px;
     display: flex;
+    left: 650px;
     flex-direction: column;
     background-color: #ededed;
     width: 400px;
@@ -201,7 +213,7 @@ button:disabled {
     max-width: 400px;
     border-radius: 35px;
     padding: 20px;
-    margin: 415px 0 0 500px;
+    margin: 110px 0 0 1100px;
     box-sizing: border-box;
 }
 
@@ -214,7 +226,7 @@ button:disabled {
     max-width: 400px;
     border-radius: 35px;
     padding: 20px;
-    margin: 20px 0 0 500px;
+    margin: 20px 0 0 1100px;
     box-sizing: border-box;
 }
 
@@ -351,9 +363,8 @@ button:disabled {
 
 .myleave {
     position: absolute;
-    top: 550px;
-    right: -150px;
-    /* 👈 ขยับไปข้าง ๆ leave request */
+    top: 230px;
+    right: 150px;
     display: flex;
     flex-direction: column;
     background-color: #ededed;
@@ -370,7 +381,6 @@ button:disabled {
     margin-bottom: 15px;
 }
 
-/* card แต่ละรายการ */
 .leaveItem {
     background-color: #fff;
     border-radius: 15px;
@@ -381,12 +391,10 @@ button:disabled {
     line-height: 1.4;
 }
 
-/* แถวข้อมูล */
 .leaveItem p {
     margin: 4px 0;
 }
 
-/* status */
 .leaveStatus {
     font-weight: bold;
     padding: 3px 10px;
@@ -394,7 +402,6 @@ button:disabled {
     display: inline-block;
 }
 
-/* สีสถานะ */
 .status-pending {
     background-color: #fff3cd;
     color: #856404;
@@ -408,4 +415,586 @@ button:disabled {
 .status-rejected {
     background-color: #f8d7da;
     color: #721c24;
+}
+
+.account {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: #ededed;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 35px;
+    padding: 25px;
+    top: 560px;
+    left: 160px;
+    box-sizing: border-box;
+}
+
+.account h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.account select {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    outline: none;
+    cursor: pointer;
+}
+
+.accountButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.accountButtons button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 20px;
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #003366;
+    color: white;
+}
+
+.accountButtons button:hover:not(:disabled) {
+    background-color: #004a94;
+    transform: translateY(-2px);
+}
+
+:global(.ReactModal__Content) {
+    max-width: 500px !important;
+    width: 90% !important;
+    height: auto !important;
+    max-height: 85vh;
+    margin: auto;
+    border-radius: 30px !important;
+    padding: 30px !important;
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+    overflow-y: auto;
+}
+
+:global(.ReactModal__Overlay) {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    z-index: 1000;
+}
+
+/* เนื้อหาข้างใน Modal */
+.ModalContent h2 {
+    color: #003366;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.ModalContent label {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #555;
+}
+
+.ModalContent input,
+.ModalContent select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.ModalContent p {
+    margin: 10px 0;
+    font-size: 1.1rem;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 5px;
+}
+
+.ModalContent button {
+    margin-top: 20px;
+    padding: 10px 25px;
+    border-radius: 15px;
+    border: none;
+    background-color: #666;
+    color: white;
+    cursor: pointer;
+}
+
+.ModalContent button[onClick*="handleSaveSlip"] {
+    background-color: #28a745;
+    margin-right: 10px;
+}
+
+.myleave::-webkit-scrollbar {
+    width: 6px;
+}
+
+.myleave::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.leaveItem hr {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 10px 0;
+}
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modalContent {
+    background: white;
+    width: 90%;
+    max-width: 480px;
+    border-radius: 25px;
+    padding: 30px;
+    outline: none;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.modalBody h2 {
+    color: #000000;
+    margin-top: 0;
+    text-align: center;
+    font-size: 1.6rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+}
+
+.modalField {
+    margin: 20px 0;
+}
+
+.modalField label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.modalField select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+}
+
+.reportDetails {
+    text-align: center;
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+}
+
+.attendanceBox {
+    text-align: center;
+    background: #ffffff;
+    color: black;
+    padding: 15px;
+    border-radius: 15px;
+    margin: 15px 0;
+}
+
+.attendanceBox h4 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.statsGrid span {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px;
+    border-radius: 8px;
+}
+
+.financialInfo p {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    margin: 0;
+}
+
+.netSalary {
+    margin-top: 10px !important;
+    border-bottom: none !important;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #003366;
+}
+
+.closeModalBtn {
+    width: 100%;
+    padding: 12px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.closeModalBtn:hover {
+    background-color: #b20d12;
+}
+
+.modalForm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.modalForm label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.modalForm input,
+.modalForm select {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.modalForm input:focus {
+    border-color: #003366;
+    box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+}
+
+.divider {
+    height: 1px;
+    background: #eee;
+    margin: 10px 0;
+}
+
+.readOnlyField input {
+    background-color: #f8f9fa;
+    color: #666;
+    border-style: dashed;
+    cursor: not-allowed;
+}
+
+.highlightField input {
+    background-color: #00336627;
+    color: #86a0bb;
+    border-color: #003366;
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-align: right;
+}
+
+.modalActions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.saveBtn {
+    background-color: #28a745;
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.saveBtn:disabled {
+    background-color: #a5d6a7;
+    cursor: not-allowed;
+}
+
+.filterSection {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.filterSection .modalField {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.modalField label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.modalField select,
+.modalField input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.modalField input:focus,
+.modalField select:focus {
+    border-color: #003366;
+}
+
+@media (max-width: 1024px) {
+
+    .header {
+        margin-top: -170px !important;
+        margin-left: 0 !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+    }
+
+    .header .name {
+        color: white !important;
+    }
+
+    .userIcon {
+        margin-left: 20px;
+        margin-bottom: -20px;
+        font-size: 4rem;
+        color: rgb(255, 255, 255);
+    }
+
+    .logoutcontainer {
+        margin: 15px auto;
+        margin-bottom: -20px;
+    }
+
+    .checkinsection,
+    .leaverequest,
+    .otsection,
+    .myot,
+    .myleave,
+    .account {
+        position: static !important;
+        width: 92% !important;
+        max-width: 600px;
+        margin: 15px auto !important;
+        height: auto !important;
+        min-height: unset !important;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        box-sizing: border-box;
+    }
+
+    .checkinsection {
+        align-items: center;
+        top: 0;
+        left: 0;
+    }
+
+    .clockcontainer {
+        margin: 10px 0 15px 0;
+    }
+
+    .clockcontainer h1,
+    h2 {
+        color: black !important;
+    }
+
+    .checker {
+        justify-content: center;
+    }
+
+    .leaveform {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .leaveform label {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        width: 100%;
+    }
+
+    .leaveform input,
+    .leaveform select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+    }
+
+    .otItem,
+    .leaveItem {
+        width: 100%;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: #f9f9f9;
+        border-radius: 8px;
+    }
+
+    .otSummary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .account select {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+
+    .accountButtons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .modalContent {
+        width: 95% !important;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    .statsGrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        text-align: center;
+    }
+}
+
+.profilesection {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: #ededed;
+    width: 500px;
+    border-radius: 35px;
+    padding: 20px 40px;
+    top: 230px;
+    left: 110px;
+}
+
+.profileheader {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.profileIcon {
+    font-size: 3rem;
+    color: #003366;
+}
+
+.profileinfo {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 20px;
+    row-gap: 10px;
+    width: 100%;
+    line-height: 1.5;
+}
+
+.profileinfo input {
+    width: 100%;
+    padding: 2.5px 8px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: none;
+    box-sizing: border-box;
+}
+
+.profileinfo h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.editBtn {
+    background-color: #003366;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 25px;
+    border: none;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+.btncontainer {
+    display: flex;
+    gap: 5px;
+}
+
+.saveBtn {
+    grid-column: span 2;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    background-color: #28a745;
+    color: white;
+}
+
+.cancelBtn {
+    grid-column: span 2;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    background-color: #dc3545;
+    color: white;
 }
