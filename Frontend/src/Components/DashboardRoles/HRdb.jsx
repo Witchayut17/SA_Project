@@ -488,7 +488,10 @@ const HRdb = ({ userId }) => {
                 >
                     <option value="">-- เลือกคำขอลา --</option>
                     {leaveRequests
-                        .filter(leave => !statusFilter || leave.status === statusFilter)
+                        .filter(leave =>
+                            (!statusFilter || leave.status === statusFilter) &&
+                            (!selectedUserId || leave.userId === selectedUserId)
+                        )
                         .map(leave => (
                             <option
                                 key={leave._id}
