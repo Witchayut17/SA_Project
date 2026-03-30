@@ -1,19 +1,16 @@
-# Stage 1: Build 
-FROM node:20-alpine AS build 
+# Stage 1: Build the React application 
+FROM node:18-alpine AS build 
 WORKDIR /app 
-
 COPY package*.json ./ 
-
-RUN npm ci --legacy-peer-deps 
-
+RUN npm install 
 COPY . . 
 RUN npm run build 
-
-FROM node:20-alpine 
-WORKDIR /app 
-
-COPY --from=build /app/.output ./.output 
-
-EXPOSE 3000 
-
-CMD ["node", ".output/server/index.mjs"]
+ 
+# Stage 2: Serve the app with Nginx 
+FROM nginx:alpine 
+# คัดลอกไฟล์ที ่ build เสร็จแล้วไปไว้ในโฟลเดอร์ของ Nginx 
+COPY --from=build /app/dist /usr/share/nginx/html
+# หมายเหตุ: หากใช้ Create React App ให้เปลี่ยน /app/dist เป็น /app/build 
+ 
+EXPOSE 80 
+CMD ["nginx", "-g", "daemon off;"]
